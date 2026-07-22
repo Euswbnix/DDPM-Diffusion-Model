@@ -1,0 +1,5 @@
+torch>=2.4,!=2.10.*  # 2.10.x inductor corrupts bf16 grads: pytorch/pytorch#190796
+torchvision
+clean-fid
+pyyaml
+tqdm

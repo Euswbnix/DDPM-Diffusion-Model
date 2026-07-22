@@ -1,0 +1,7 @@
+# Throughput calibration: real M1 model/batch/systems config, 600 steps.
+# Steady-state imgs/sec from the tail of this run predicts M1 wall-clock.
+run_dir: runs/calib
+total_steps: 600
+log_every: 100
+ckpt_every: 600
+snapshot_every: 600

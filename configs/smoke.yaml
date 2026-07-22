@@ -1,0 +1,15 @@
+# Tiny end-to-end smoke test: runs in ~1 min on CPU/MPS, seconds on the 5090.
+run_dir: runs/smoke
+ch: 32
+ch_mult: [1, 2]
+num_res_blocks: 1
+T: 100
+batch_size: 16
+total_steps: 30
+warmup: 10
+log_every: 5
+ckpt_every: 30
+snapshot_every: 30
+compile: false
+amp_bf16: false
+num_workers: 2

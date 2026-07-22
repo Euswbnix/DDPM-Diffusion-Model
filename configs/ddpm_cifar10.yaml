@@ -1,0 +1,7 @@
+# M1: paper-faithful DDPM baseline (Ho et al. 2020, CIFAR-10 uncond, FID 3.17)
+# All model/diffusion/optimizer values are already the defaults; this file only
+# names the run. Systems-side settings (bf16, compile) do not change the math.
+run_dir: runs/ddpm_cifar10_baseline
+total_steps: 800000
+ckpt_every: 20000
+snapshot_every: 50000
