@@ -35,6 +35,10 @@ DEFAULTS = dict(
     snapshot_every=50_000,
     run_dir="runs/dev",
     data_dir="data",
+    # experiment tracking (on-clock but negligible: one async log per log_every)
+    swanlab=True,
+    swanlab_project="ddpm-speedrun",
+    swanlab_mode="cloud",
 )
 
 

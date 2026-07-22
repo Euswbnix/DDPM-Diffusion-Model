@@ -3,3 +3,4 @@ torchvision
 clean-fid
 pyyaml
 tqdm
+swanlab

@@ -77,6 +77,20 @@ def main():
         json.dump(vars(cfg), f, indent=2)
     log_f = open(os.path.join(cfg.run_dir, "log.jsonl"), "a")
 
+    swan = None
+    if cfg.swanlab:
+        try:  # tracking is a convenience — never let it kill a training run
+            import swanlab
+
+            swan = swanlab.init(
+                project=cfg.swanlab_project,
+                experiment_name=os.path.basename(cfg.run_dir.rstrip("/")),
+                config=vars(cfg),
+                mode=cfg.swanlab_mode,
+            )
+        except Exception as e:
+            print(f"swanlab disabled: {e}")
+
     model = UNet(
         ch=cfg.ch,
         ch_mult=tuple(cfg.ch_mult),
@@ -145,9 +159,11 @@ def main():
                 elapsed=round(clock(), 1),
                 lr=opt.param_groups[0]["lr"],
             )
-            print(json.dumps(rec))
+            print(json.dumps(rec), flush=True)
             log_f.write(json.dumps(rec) + "\n")
             log_f.flush()
+            if swan is not None:
+                swanlab.log({k: v for k, v in rec.items() if k != "step"}, step=step)
             loss_acc.zero_()
             n_acc, t_log = 0, now
 
@@ -166,6 +182,8 @@ def main():
             os.replace(tmp, tmp[:-4])
 
     print(f"done: {step} steps in {clock():.0f}s on-clock")
+    if swan is not None:
+        swanlab.finish()
 
 
 if __name__ == "__main__":
