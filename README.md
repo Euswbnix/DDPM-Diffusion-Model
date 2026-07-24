@@ -11,8 +11,9 @@ under a locked evaluation protocol. nanoGPT-speedrun spirit, diffusion edition.
 
 ## Status
 
-M1 baseline landed: a paper-faithful DDPM reproduces to legacy-TF FID **3.150**
-in **10.98 h** on one RTX 5090. Now building the M2 recipe ladder. Reference
+M1 baseline landed: a paper-faithful DDPM reproduces to legacy-TF FID **3.150**,
+crossing the 3.17 target in **≤8.24 h** on one RTX 5090 (M2 Phase-0 time-to-FID
+curve; 50k confirmation pending). Now building the M2 recipe ladder. Reference
 hardware: RTX 5090 32GB.
 
 | Milestone | What | Status |
@@ -24,17 +25,23 @@ hardware: RTX 5090 32GB.
 
 ## Leaderboard (protocol v0.2)
 
-Ranked by legacy-TF FID (min of 3 seeds); clean-FID shown as disclosure.
+Wall-clock training time to reach each legacy-TF FID target (min of 3 seeds).
 
-| Entry | Wall-clock | Final FID (min of 3) | clean-FID | EMA | Hardware |
-|---|---|---|---|---|---|
-| DDPM (paper-faithful) | 10.98 h | **3.150** | 3.835 | 0.99995 | RTX 5090 |
+| Entry | →5.0 | →3.17 | →2.5 | →2.0 | Final FID (min-3) | Hardware |
+|---|---|---|---|---|---|---|
+| DDPM (paper-faithful) | ~2.4 h † | ≤8.24 h † | not reached | not reached | **3.150** | RTX 5090 |
 
-Baseline detail: 35.75M U-Net, linear-β, ε-prediction, 800k steps, DDPM-1000
-ancestral sampling. Per-seed legacy-TF FID {3.150, 3.182, 3.164}. Matches the
-paper's 3.17 anchor (community PyTorch reproduction: 3.188). Convergence check:
-FID is flat between the 600k and 800k snapshots, so the paper's 800k budget has
-~25% slack — a lever for M2.
+† Located from a 10k-sample proxy sweep across snapshots (`M2 Phase-0`, zero
+retrain); 50k/3-seed record confirmation of the 600k crossing is pending. The
+≤8.24 h is high-confidence: the 600k proxy FID (5.132) ties 800k's (5.140), and
+800k's true 50k FID is the record 3.150 — so 600k also clears 3.17, i.e. the old
+"10.98 h" was the 800k *upper bound*, not the crossing.
+
+Baseline detail: 35.75M U-Net, linear-β, ε-prediction, DDPM-1000 ancestral
+sampling, EMA 0.99995. Final min-of-3 legacy-TF FID {3.150, 3.182, 3.164} at 800k;
+clean-FID 3.835. Matches the paper's 3.17 anchor (community PyTorch reproduction:
+3.188). **2.5/2.0 are unreachable by this recipe** — FID is flat past 600k, so
+they require an M2 recipe change (EDM rung), not more training.
 
 ## Layout
 
