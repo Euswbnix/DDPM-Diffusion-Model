@@ -99,8 +99,27 @@ def main():
     record = args.n == 50_000 and len(seeds) == 3 and len(set(seeds)) == 3
 
     tag = os.path.basename(args.ckpt).removesuffix(".pt")
+
+    # Per-seed resume: checkpoint each finished seed's FID next to the ckpt, so a
+    # mid-run kill only costs the seed in flight. Re-running the same command
+    # skips seeds already scored. (runs/ is gitignored, so these stay local.)
+    def partial_path(seed):
+        return args.ckpt.replace(
+            ".pt", f"_fid_ema{args.ema}_{args.sampler}{args.n}_seed{seed}.partial.json"
+        )
+
     scores, scores_clean = {}, {}
     for seed in seeds:
+        pp = partial_path(seed)
+        if os.path.exists(pp):
+            cached = json.load(open(pp))
+            scores[seed], scores_clean[seed] = cached["legacy"], cached["clean"]
+            print(
+                f"seed {seed}: resumed from checkpoint — "
+                f"FID {scores[seed]:.4f} (legacy_tf) / {scores_clean[seed]:.4f} (clean)",
+                flush=True,
+            )
+            continue
         out_dir = os.path.join(
             "samples", f"{tag}_ema{args.ema}_{args.sampler}_seed{seed}"
         )
@@ -118,6 +137,11 @@ def main():
                     dataset_split="train",
                     mode=mode,
                 )
+            # checkpoint this seed atomically before the next one starts
+            tmp = pp + ".tmp"
+            with open(tmp, "w") as f:
+                json.dump({"legacy": scores[seed], "clean": scores_clean[seed]}, f)
+            os.replace(tmp, pp)
             print(
                 f"seed {seed}: FID {scores[seed]:.4f} (legacy_tf) / "
                 f"{scores_clean[seed]:.4f} (clean)",
@@ -149,6 +173,12 @@ def main():
     )
     with open(out_json, "w") as f:
         json.dump(result, f, indent=2)
+    # final result persisted — drop the per-seed resume checkpoints
+    for seed in seeds:
+        try:
+            os.remove(partial_path(seed))
+        except OSError:
+            pass
     print(f"wrote {out_json}")
 
 
