@@ -142,7 +142,11 @@ def main():
         record_protocol=record,
     )
     print(json.dumps(result, indent=2))
-    out_json = args.ckpt.replace(".pt", f"_fid_ema{args.ema}_{args.sampler}{args.n}.json")
+    # seed tag in the filename so split-seed runs don't overwrite each other
+    seed_tag = "-".join(str(s) for s in seeds)
+    out_json = args.ckpt.replace(
+        ".pt", f"_fid_ema{args.ema}_{args.sampler}{args.n}_seed{seed_tag}.json"
+    )
     with open(out_json, "w") as f:
         json.dump(result, f, indent=2)
     print(f"wrote {out_json}")
