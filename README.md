@@ -11,15 +11,18 @@ under a locked evaluation protocol. nanoGPT-speedrun spirit, diffusion edition.
 
 ## Status
 
-M1 baseline landed: a paper-faithful DDPM reproduces to legacy-TF FID **3.150**,
-crossing the 3.17 target in **≤8.24 h** on one RTX 5090 (M2 Phase-0 time-to-FID
-curve; 50k confirmation pending). Now building the M2 recipe ladder. Reference
-hardware: RTX 5090 32GB.
+M1 baseline landed: a paper-faithful DDPM reaches legacy-TF FID **3.139**
+(50k/3-seed, at 700k / 9.61 h) and crosses the 3.17 target in **≤9.61 h** on one
+RTX 5090. The 50k confirmation replaced an earlier proxy-based ≤8.24 h estimate:
+600k (8.24 h) actually scores 3.191 (misses), 700k (9.61 h) scores 3.139 (clears),
+so the crossing sits in (8.24 h, 9.61 h] — and 700k is the best snapshot, training
+past it doesn't help (800k is a hair worse at 3.150). Now building the M2 recipe
+ladder. Reference hardware: RTX 5090 32GB.
 
 | Milestone | What | Status |
 |---|---|---|
 | M0 | Code skeleton, locked eval protocol, smoke tests | ✅ |
-| M1 | Faithful DDPM baseline entry: target FID ≈ 3.17 | ✅ FID 3.150 |
+| M1 | Faithful DDPM baseline entry: target FID ≈ 3.17 | ✅ FID 3.139 |
 | M2 | The ladder: one change per rung, time-to-FID curves | 🔨 |
 | M3 | Public leaderboard + reproduction scripts | — |
 
@@ -29,19 +32,24 @@ Wall-clock training time to reach each legacy-TF FID target (min of 3 seeds).
 
 | Entry | →5.0 | →3.17 | →2.5 | →2.0 | Final FID (min-3) | Hardware |
 |---|---|---|---|---|---|---|
-| DDPM (paper-faithful) | ~2.4 h † | ≤8.24 h † | not reached | not reached | **3.150** | RTX 5090 |
+| DDPM (paper-faithful) | ~2.4 h † | ≤9.61 h | not reached | not reached | **3.139** | RTX 5090 |
 
-† Located from a 10k-sample proxy sweep across snapshots (`M2 Phase-0`, zero
-retrain); 50k/3-seed record confirmation of the 600k crossing is pending. The
-≤8.24 h is high-confidence: the 600k proxy FID (5.132) ties 800k's (5.140), and
-800k's true 50k FID is the record 3.150 — so 600k also clears 3.17, i.e. the old
-"10.98 h" was the 800k *upper bound*, not the crossing.
+† →5.0 is located from a 10k-sample proxy sweep (`M2 Phase-0`, zero retrain) and is
+not yet 50k-confirmed. →3.17 **is** 50k/3-seed confirmed across three snapshots:
+600k (8.24 h) scores min-of-3 **3.191** — all three seeds above target, misses;
+700k (9.61 h) scores **3.139** — clears; 800k (10.98 h) scores 3.150. So the
+crossing is bracketed in (8.24 h, 9.61 h], and 700k is the best snapshot — training
+past it doesn't help (800k is marginally worse). This replaced an earlier ≤8.24 h
+estimate: the 10k proxy tie (600k 5.132 ≈ 800k 5.140) did **not** survive to the
+50k metric — a textbook case of the proxy being a biased *locator*, not a record.
 
 Baseline detail: 35.75M U-Net, linear-β, ε-prediction, DDPM-1000 ancestral
-sampling, EMA 0.99995. Final min-of-3 legacy-TF FID {3.150, 3.182, 3.164} at 800k;
-clean-FID 3.835. Matches the paper's 3.17 anchor (community PyTorch reproduction:
-3.188). **2.5/2.0 are unreachable by this recipe** — FID is flat past 600k, so
-they require an M2 recipe change (EDM rung), not more training.
+sampling, EMA 0.99995. Best min-of-3 legacy-TF FID {3.1385, 3.2149, 3.2275} =
+**3.139** at 700k (9.61 h); clean-FID 3.805. Matches the paper's 3.17 anchor
+(community PyTorch reproduction: 3.188). **2.5/2.0 are unreachable by this recipe**
+— FID plateaus at ≈3.14 by 700k (600k 3.191 → 700k 3.139 → 800k 3.150, i.e. flat
+within seed noise past 700k), so they require an M2 recipe change (EDM rung), not
+more training.
 
 ## Layout
 
@@ -63,6 +71,6 @@ configs/       run configs (ddpm_cifar10 = M1 baseline, smoke = CI-sized)
 pip install -r requirements.txt
 python train.py --config configs/smoke.yaml          # ~1 min end-to-end check
 python train.py --config configs/ddpm_cifar10.yaml   # the M1 baseline (~11h on a 5090)
-python eval_fid.py runs/ddpm_cifar10_baseline/snap_0800000.pt --ema 0.99995 --seeds 0,1,2   # record eval
+python eval_fid.py runs/ddpm_cifar10_baseline/snap_0700000.pt --ema 0.99995 --seeds 0,1,2   # record eval (best snapshot)
 python sample.py runs/ddpm_cifar10_baseline/ckpt.pt --out grid.png
 ```
