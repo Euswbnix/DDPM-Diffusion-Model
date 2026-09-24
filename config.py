@@ -27,6 +27,8 @@ DEFAULTS = dict(
     # systems
     compile=True,
     amp_bf16=True,
+    adam_fused=False,     # M2 rung-1 throughput lever; default off keeps M1 identical
+    channels_last=False,  # M2 rung-1 throughput lever; default off keeps M1 identical
     num_workers=8,
     seed=0,
     # bookkeeping

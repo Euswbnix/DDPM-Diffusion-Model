@@ -99,10 +99,12 @@ def main():
         dropout=cfg.dropout,
         img_res=cfg.img_res,
     ).to(device)
+    if cfg.channels_last and is_cuda:  # rung-1: NHWC storage; math-identical, faster conv kernels
+        model = model.to(memory_format=torch.channels_last)
     n_params = sum(p.numel() for p in model.parameters())
     diffusion = GaussianDiffusion(cfg.T, cfg.beta_start, cfg.beta_end).to(device)
     ema = MultiEMA(model, cfg.ema_decays)
-    opt = torch.optim.Adam(model.parameters(), lr=cfg.lr)
+    opt = torch.optim.Adam(model.parameters(), lr=cfg.lr, fused=cfg.adam_fused and is_cuda)
 
     step, elapsed_prev = 0, 0.0
     if args.resume:
@@ -139,6 +141,8 @@ def main():
             g["lr"] = cfg.lr * min(1.0, (step + 1) / cfg.warmup)
 
         x = next(batches).to(device, non_blocking=True)
+        if cfg.channels_last and is_cuda:
+            x = x.contiguous(memory_format=torch.channels_last)
         with torch.autocast("cuda", torch.bfloat16, enabled=cfg.amp_bf16 and is_cuda):
             loss = diffusion.loss(fwd, x)
         opt.zero_grad(set_to_none=True)
