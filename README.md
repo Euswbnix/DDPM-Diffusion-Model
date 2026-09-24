@@ -8,6 +8,8 @@ under a locked evaluation protocol. nanoGPT-speedrun spirit, diffusion edition.
 - **[PROTOCOL.md](PROTOCOL.md)** — the benchmark rules (metric, clock, allowed moves)
 - **[research-directions.md](research-directions.md)** — the July 2026 survey that
   chose this direction (and the alternatives it rejected)
+- **[Weights on Hugging Face](https://huggingface.co/euswbnix/ddpm-cifar10)** — the
+  M1 record model (700k steps, EMA 0.99995, FID 3.139), with a loading example
 
 ## Status
 
@@ -74,3 +76,7 @@ python train.py --config configs/ddpm_cifar10.yaml   # the M1 baseline (~11h on 
 python eval_fid.py runs/ddpm_cifar10_baseline/snap_0700000.pt --ema 0.99995 --seeds 0,1,2   # record eval (best snapshot)
 python sample.py runs/ddpm_cifar10_baseline/ckpt.pt --out grid.png
 ```
+
+## License
+
+MIT, see [LICENSE](LICENSE). The released weights use the same license.
